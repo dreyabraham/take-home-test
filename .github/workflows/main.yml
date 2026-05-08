@@ -123,10 +123,9 @@ jobs:
 
       - name: Helm Test Installation
         run: |
-          helm install myapp ${{ env.HELM_CHART_PATH }} \
+          helm template myapp ${{ env.HELM_CHART_PATH }} \
             -f ${{ env.HELM_CHART_PATH }}/values.yaml \
             -f ${{ env.HELM_CHART_PATH }}/values.prod.yaml \
             --set image.repository=${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }} \
             --set image.tag=${{ needs.docker.outputs.image_tag }} \
-            --dry-run=client \
             --debug
