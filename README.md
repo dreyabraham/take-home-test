@@ -1,4 +1,4 @@
-# take-home-test
+# Take-home-test
 
 A production-ready infrastructure repository demonstrating GitOps, IaC, and container deployment practices using Terraform, Helm, and GitHub Actions.
 
@@ -175,15 +175,13 @@ helm lint helm/microservice \
   -f helm/microservice/values.yaml \
   -f helm/microservice/values.prod.yaml
 
-# Render all templates and validate
-helm install myapp helm/microservice \
+# Render all templates locally (no cluster needed)
+helm template myapp helm/microservice \
   -f helm/microservice/values.yaml \
   -f helm/microservice/values.prod.yaml \
   --set image.repository=nginx \
   --set image.tag=latest \
-  --dry-run=client \
   --debug \
-  --generate-name
 ```
 
 ---
@@ -214,7 +212,7 @@ Validates the Terraform configuration without deploying anything:
 ### Job 3 — Helm Lint & Test Installation
 
 1. `helm lint` — validates the chart structure and best practices
-2. `helm install --dry-run=client --debug` — renders all templates with the real image URI injected from Job 2 and simulates a full installation without a cluster
+2. `helm template` — renders all manifests locally with the real image URI injected from Job 2. We use `helm template` over `helm install --dry-run=client` because even with the dry-run flag, Helm still attempts to reach a Kubernetes cluster to check the server version — which fails in CI with no cluster available. `helm template` is fully offline and produces identical rendered output without any cluster interaction
 
 ### Required GitHub Secrets
 
@@ -262,3 +260,6 @@ A single NAT Gateway is a single point of failure. If the AZ hosting it goes dow
 
 **Why `ignore_changes` on `desired_size` in the node group?**
 The cluster autoscaler modifies `desired_size` at runtime. Without `ignore_changes`, the next `terraform apply` would reset it back to the value in code, potentially removing nodes the autoscaler added under load.
+
+**Why `helm template` instead of `helm install --dry-run` in CI?**
+Even with `--dry-run=client`, Helm still tries to connect to a Kubernetes cluster to fetch the server version before rendering templates. In CI there's no cluster, so it fails with "connection refused". `helm template` is fully offline — it renders all manifests locally and produces identical output without touching any cluster. It's the right tool for template validation in a pipeline.
