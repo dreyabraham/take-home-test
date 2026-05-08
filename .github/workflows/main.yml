@@ -129,5 +129,4 @@ jobs:
             --set image.repository=${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }} \
             --set image.tag=${{ needs.docker.outputs.image_tag }} \
             --dry-run=client \
-            --debug \
-            --generate-name
+            --debug
